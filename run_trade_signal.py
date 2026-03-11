@@ -59,6 +59,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--source-csv", default="", help="Optional source CSV for training.")
     parser.add_argument("--start", default="", help="UTC ISO start for training history.")
     parser.add_argument("--end", default="", help="UTC ISO end for training history.")
+    parser.add_argument("--episodes", type=int, default=0, help="Optional override for training episodes.")
     parser.add_argument("--force-train", action="store_true", help="Train even if model exists.")
     parser.add_argument("--train-if-missing", action="store_true", help="Train if model is missing.")
     parser.add_argument("--python-exe", default=sys.executable, help="Python executable to use.")
@@ -100,6 +101,8 @@ def main() -> int:
         cmd.extend(["--start", args.start])
     if args.end:
         cmd.extend(["--end", args.end])
+    if args.episodes and args.episodes > 0:
+        cmd.extend(["--episodes", str(args.episodes)])
     if args.force_train:
         cmd.append("--force-train")
     if args.train_if_missing:

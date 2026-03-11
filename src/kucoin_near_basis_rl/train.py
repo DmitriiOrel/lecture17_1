@@ -34,8 +34,13 @@ def run_training(
     start_iso: str | None = None,
     end_iso: str | None = None,
     features_out: str | None = None,
+    episodes_override: int | None = None,
 ) -> dict[str, float]:
     cfg = load_config(config_path)
+    if episodes_override is not None:
+        if episodes_override <= 0:
+            raise ValueError("episodes_override must be > 0")
+        cfg.rl.episodes = int(episodes_override)
 
     if source_csv:
         raw = pd.read_csv(source_csv, parse_dates=["timestamp"])
@@ -79,6 +84,7 @@ def run_training(
         gamma=cfg.rl.gamma,
         seed=42,
     )
+    print(f"Training RL: episodes={cfg.rl.episodes}, rows={len(feature_frame)}")
 
     history = train_qlearning(
         env=env,
@@ -130,6 +136,7 @@ def main() -> None:
     parser.add_argument("--start", default=None, help="UTC ISO timestamp for history start.")
     parser.add_argument("--end", default=None, help="UTC ISO timestamp for history end.")
     parser.add_argument("--features-out", default=None, help="Optional output CSV with engineered features.")
+    parser.add_argument("--episodes", type=int, default=None, help="Optional override for RL episodes.")
     args = parser.parse_args()
 
     metrics = run_training(
@@ -139,6 +146,7 @@ def main() -> None:
         start_iso=args.start,
         end_iso=args.end,
         features_out=args.features_out,
+        episodes_override=args.episodes,
     )
     print("Training complete:")
     for key, value in metrics.items():

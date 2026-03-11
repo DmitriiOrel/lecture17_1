@@ -63,6 +63,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--source-csv", default="", help="Optional local source CSV for training.")
     parser.add_argument("--start", default="", help="UTC ISO start for training history.")
     parser.add_argument("--end", default="", help="UTC ISO end for training history.")
+    parser.add_argument("--episodes", type=int, default=0, help="Override training episodes for faster runs.")
     parser.add_argument(
         "--force-train",
         action="store_true",
@@ -104,6 +105,7 @@ def _train_model_if_needed(args: argparse.Namespace, repo_root: Path) -> None:
         start_iso=args.start or None,
         end_iso=args.end or None,
         features_out=str((repo_root / args.features_out).resolve()) if args.features_out else None,
+        episodes_override=(int(args.episodes) if args.episodes and args.episodes > 0 else None),
     )
     print("Training complete:")
     print(json.dumps(metrics, indent=2))

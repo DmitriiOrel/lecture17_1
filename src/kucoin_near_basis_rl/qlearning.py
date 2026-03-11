@@ -15,16 +15,24 @@ from .env import BasisTradingEnv
 @dataclass
 class StateDiscretizer:
     bin_edges: list[list[float]]
+    _bin_edges_np: list[np.ndarray] = field(init=False, repr=False)
+
+    def __post_init__(self) -> None:
+        self._bin_edges_np = [np.asarray(edges, dtype=np.float64) for edges in self.bin_edges]
 
     def transform(self, observation: np.ndarray) -> tuple[int, ...]:
-        if len(observation) != len(self.bin_edges):
+        if len(observation) != len(self._bin_edges_np):
             raise ValueError("Observation size does not match number of bin sets.")
         state: list[int] = []
-        for value, edges in zip(observation, self.bin_edges):
+        obs = np.asarray(observation, dtype=np.float64)
+        for value, edges in zip(obs, self._bin_edges_np):
             if np.isnan(value):
                 state.append(0)
                 continue
-            bucket = int(np.digitize(value, np.asarray(edges, dtype=np.float64), right=False))
+            if edges.size == 0:
+                state.append(0)
+                continue
+            bucket = int(np.searchsorted(edges, value, side="left"))
             state.append(bucket)
         return tuple(state)
 
