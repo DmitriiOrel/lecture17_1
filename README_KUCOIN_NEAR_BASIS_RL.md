@@ -22,6 +22,7 @@
 
 ## Установка
 ```powershell
+pip install --upgrade pip wheel "setuptools<81"
 pip install -r requirements.kucoin_near_basis_rl.txt
 ```
 

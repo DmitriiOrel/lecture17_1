@@ -31,14 +31,14 @@ python -m venv venv
 Windows:
 ```powershell
 .\venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip setuptools wheel
+python -m pip install --upgrade pip wheel "setuptools<81"
 python -m pip install -r requirements.txt
 ```
 
 macOS/Linux:
 ```bash
 source venv/bin/activate
-python -m pip install --upgrade pip setuptools wheel
+python -m pip install --upgrade pip wheel "setuptools<81"
 python -m pip install -r requirements.txt
 chmod +x run_kucoin_trade_signal.sh
 ```
@@ -115,6 +115,8 @@ Notebook shows:
   passphrase does not match API key.
 - `ConnectionError`:
   check firewall/network access to `api.kucoin.com` and `api-futures.kucoin.com`.
+- `pkg_resources` / `NameError` from `kucoin-python`:
+  run `python -m pip install "setuptools<81"` and retry.
 
 ## 8) Security
 

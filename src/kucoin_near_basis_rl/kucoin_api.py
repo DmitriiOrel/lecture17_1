@@ -232,7 +232,12 @@ class KuCoinExecutionClient:
         try:
             from kucoin.client import Trade as SpotTradeClient  # type: ignore
             from kucoin_futures.client import Trade as FuturesTradeClient  # type: ignore
-        except ImportError as exc:
+        except Exception as exc:
+            if "pkg_resources" in str(exc):
+                raise RuntimeError(
+                    "kucoin-python SDK failed to import because pkg_resources is unavailable. "
+                    "Run: python -m pip install \"setuptools<81\""
+                ) from exc
             raise RuntimeError(
                 "KuCoin SDK is not installed. Install kucoin-python and kucoin-futures-python."
             ) from exc
