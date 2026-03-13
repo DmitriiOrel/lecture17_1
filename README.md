@@ -78,7 +78,7 @@ One-command live (PowerShell):
 .\scripts\bot.ps1 -Action docker-live-up
 ```
 
-The script auto-removes old `near-rl-live` container name conflicts before start.
+The script auto-removes old `near-rl-live` container name conflicts before start and will start Docker Desktop automatically if engine is down.
 
 One-command live (bash):
 

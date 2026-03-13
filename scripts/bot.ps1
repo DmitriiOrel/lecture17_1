@@ -46,6 +46,44 @@ function Ensure-Docker {
     }
 }
 
+function Test-DockerEngine {
+    & docker info *> $null
+    return ($LASTEXITCODE -eq 0)
+}
+
+function Ensure-DockerEngineRunning {
+    if (Test-DockerEngine) {
+        return
+    }
+
+    $candidates = @(
+        (Join-Path $env:ProgramFiles "Docker\\Docker\\Docker Desktop.exe"),
+        (Join-Path ${env:ProgramFiles(x86)} "Docker\\Docker\\Docker Desktop.exe")
+    ) | Where-Object { $_ -and (Test-Path $_) }
+
+    if (-not $candidates -or $candidates.Count -eq 0) {
+        throw "Docker engine is not running, and Docker Desktop.exe was not found."
+    }
+
+    $dockerDesktop = $candidates[0]
+    Write-Host "> starting Docker Desktop: $dockerDesktop"
+    Start-Process -FilePath $dockerDesktop | Out-Null
+
+    $ready = $false
+    $maxChecks = 60 # ~180 sec
+    for ($i = 0; $i -lt $maxChecks; $i++) {
+        Start-Sleep -Seconds 3
+        if (Test-DockerEngine) {
+            $ready = $true
+            break
+        }
+    }
+
+    if (-not $ready) {
+        throw "Docker engine did not become ready in time. Check Docker Desktop status."
+    }
+}
+
 function Invoke-DockerCompose {
     param(
         [string[]]$ArgList
@@ -153,6 +191,7 @@ switch ($Action) {
     }
     "docker-build" {
         Ensure-Docker
+        Ensure-DockerEngineRunning
         Push-Location $ProjectDir
         try {
             Invoke-Checked -Exe "docker" -ArgList @("build", "-t", "lecture17-kucoin-rl", ".")
@@ -162,21 +201,25 @@ switch ($Action) {
     }
     "docker-shadow-once" {
         Ensure-Docker
+        Ensure-DockerEngineRunning
         New-Item -ItemType Directory -Path (Join-Path $ProjectDir ".runtime"), (Join-Path $ProjectDir "models"), (Join-Path $ProjectDir "reports"), (Join-Path $ProjectDir "logs") -Force | Out-Null
         Invoke-DockerCompose -ArgList @("run", "--rm", "near-rl-shadow-once")
     }
     "docker-live-up" {
         Ensure-Docker
+        Ensure-DockerEngineRunning
         New-Item -ItemType Directory -Path (Join-Path $ProjectDir ".runtime"), (Join-Path $ProjectDir "models"), (Join-Path $ProjectDir "reports"), (Join-Path $ProjectDir "logs") -Force | Out-Null
         Remove-DockerContainerIfExists -Name "near-rl-live"
         Invoke-DockerCompose -ArgList @("up", "-d", "--build", "near-rl-live")
     }
     "docker-live-logs" {
         Ensure-Docker
+        Ensure-DockerEngineRunning
         Invoke-DockerCompose -ArgList @("logs", "-f", "--tail", "100", "near-rl-live")
     }
     "docker-live-down" {
         Ensure-Docker
+        Ensure-DockerEngineRunning
         Invoke-DockerCompose -ArgList @("down")
     }
 }
