@@ -5,7 +5,7 @@ import time
 
 import numpy as np
 
-from .baseline import ACTION_TO_POSITION, POSITION_TO_ACTION, BaselinePolicy
+from .baseline import ACTION_TO_POSITION
 from .config import load_config
 from .features import FEATURE_COLUMNS, build_feature_frame
 from .kucoin_api import KuCoinExecutionClient, KuCoinPublicDataClient
@@ -18,10 +18,6 @@ def run_live(config_path: str, model_path: str, paper: bool, once: bool) -> None
 
     data_client = KuCoinPublicDataClient(cfg.api)
     execution_client = KuCoinExecutionClient(cfg.api, dry_run=paper)
-    baseline = BaselinePolicy(
-        enter_zscore=cfg.baseline.enter_zscore,
-        exit_zscore=cfg.baseline.exit_zscore,
-    )
 
     current_position = 0
     while True:
@@ -37,13 +33,8 @@ def run_live(config_path: str, model_path: str, paper: bool, once: bool) -> None
         observation = np.array(obs, dtype=float)
 
         state = discretizer.transform(observation)
-        baseline_position = baseline.decide_position(float(row["basis_zscore"]), current_position)
-        baseline_action = POSITION_TO_ACTION[baseline_position]
-
-        if agent.has_state(state):
-            action = agent.greedy_action(state)
-        else:
-            action = baseline_action
+        state_known = agent.has_state(state)
+        action = agent.greedy_action(state)
 
         target_position = ACTION_TO_POSITION[action]
         prices = data_client.fetch_price_snapshot(
@@ -72,6 +63,7 @@ def run_live(config_path: str, model_path: str, paper: bool, once: bool) -> None
                 "basis": float(row["basis"]),
                 "zscore": float(row["basis_zscore"]),
                 "action": action,
+                "action_source": "rl_known_state" if state_known else "rl_new_state",
                 "target_position": target_position,
                 "paper_mode": paper,
                 "orders": result["orders"],

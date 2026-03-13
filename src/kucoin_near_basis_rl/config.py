@@ -47,6 +47,7 @@ class RlConfig:
     epsilon_start: float = 0.25
     epsilon_end: float = 0.02
     epsilon_decay: float = 0.97
+    use_baseline_guidance: bool = False
     imitation_start: float = 0.35
     imitation_end: float = 0.05
     imitation_decay: float = 0.97

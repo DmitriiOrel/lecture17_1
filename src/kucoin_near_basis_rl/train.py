@@ -59,16 +59,17 @@ def run_training(
     if len(feature_frame) < max(cfg.features.zscore_window, cfg.features.volatility_window) + 10:
         raise RuntimeError("Not enough candles after feature engineering.")
 
-    baseline = BaselinePolicy(
-        enter_zscore=cfg.baseline.enter_zscore,
-        exit_zscore=cfg.baseline.exit_zscore,
-    )
-
-    baseline_positions: list[int] = []
-    current_position = 0
-    for row in feature_frame.itertuples():
-        current_position = baseline.decide_position(float(row.basis_zscore), current_position)
-        baseline_positions.append(current_position)
+    baseline_positions: list[int] | None = None
+    if cfg.rl.use_baseline_guidance:
+        baseline = BaselinePolicy(
+            enter_zscore=cfg.baseline.enter_zscore,
+            exit_zscore=cfg.baseline.exit_zscore,
+        )
+        baseline_positions = []
+        current_position = 0
+        for row in feature_frame.itertuples():
+            current_position = baseline.decide_position(float(row.basis_zscore), current_position)
+            baseline_positions.append(current_position)
 
     env = BasisTradingEnv(
         feature_frame=feature_frame,
@@ -85,6 +86,10 @@ def run_training(
         seed=42,
     )
     print(f"Training RL: episodes={cfg.rl.episodes}, rows={len(feature_frame)}")
+    if cfg.rl.use_baseline_guidance:
+        print("Baseline guidance: enabled")
+    else:
+        print("Baseline guidance: disabled (pure RL)")
 
     history = train_qlearning(
         env=env,

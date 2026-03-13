@@ -9,6 +9,8 @@ The strategy is delta-neutral basis mean-reversion with RL decision making:
 - Q-learning agent trained on basis features
 - live/shadow execution through KuCoin SDK
 
+Current runtime mode: `RL-only` (no baseline fallback in live decisions).
+
 ## Repository structure (lecture16-style)
 
 - `notebooks/lecture16_basis_rl_colab.ipynb` - lecture16-style notebook entrypoint.
@@ -125,6 +127,9 @@ Notebook shows:
 2. Build basis features (`volume`, `volatility`, `z-score`, etc).
 3. Train RL model.
 4. Run one paper decision tick.
+
+Note:
+- `tick["action_source"]` in logs shows `rl_known_state` or `rl_new_state`.
 
 ## 7) Common issues
 

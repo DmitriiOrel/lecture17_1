@@ -85,6 +85,37 @@ def test_qlearning_training_runs() -> None:
     assert len(agent.q_table) > 0
 
 
+def test_qlearning_training_runs_without_baseline_guidance() -> None:
+    raw = _synthetic_raw()
+    frame = build_feature_frame(raw, FeatureConfig())
+    env = BasisTradingEnv(
+        feature_frame=frame,
+        observation_columns=FEATURE_COLUMNS,
+        fee_rate_per_rebalance=0.0005,
+        risk_penalty=0.0001,
+    )
+    bins = build_quantile_bins(frame, FEATURE_COLUMNS, [0.1, 0.3, 0.5, 0.7, 0.9])
+    discretizer = StateDiscretizer(bin_edges=bins)
+    agent = QLearningAgent(num_actions=3, alpha=0.1, gamma=0.98, seed=2)
+    rewards = train_qlearning(
+        env=env,
+        agent=agent,
+        discretizer=discretizer,
+        baseline_positions=None,
+        episodes=3,
+        epsilon_start=0.2,
+        epsilon_end=0.05,
+        epsilon_decay=0.9,
+        imitation_start=0.0,
+        imitation_end=0.0,
+        imitation_decay=1.0,
+        baseline_bonus=0.0,
+        max_steps_per_episode=300,
+    )
+    assert len(rewards) == 3
+    assert len(agent.q_table) > 0
+
+
 def test_construct_with_supported_kwargs_handles_sdk_signature_variants() -> None:
     class OldStyleClient:
         def __init__(self, key: str, secret: str, passphrase: str) -> None:

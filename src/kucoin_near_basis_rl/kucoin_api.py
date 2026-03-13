@@ -375,6 +375,7 @@ class KuCoinExecutionClient:
             futures_symbol,
             futures_side,
             size=futures_size,
+            lever=leverage,
             leverage=leverage,
             reduceOnly=reduce_only,
             reduce_only=reduce_only,

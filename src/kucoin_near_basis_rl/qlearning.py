@@ -8,7 +8,6 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from .baseline import POSITION_TO_ACTION
 from .env import BasisTradingEnv
 
 
@@ -116,7 +115,7 @@ def train_qlearning(
     env: BasisTradingEnv,
     agent: QLearningAgent,
     discretizer: StateDiscretizer,
-    baseline_positions: list[int],
+    baseline_positions: list[int] | None,
     episodes: int,
     epsilon_start: float,
     epsilon_end: float,
@@ -141,8 +140,10 @@ def train_qlearning(
         steps = 0
 
         while not done and steps < max_steps_per_episode:
-            baseline_position = baseline_positions[env.index]
-            baseline_action = POSITION_TO_ACTION[baseline_position]
+            baseline_action: int | None = None
+            if baseline_positions is not None:
+                baseline_position = int(baseline_positions[env.index])
+                baseline_action = {-1: 0, 0: 1, 1: 2}[baseline_position]
             action = agent.select_action(
                 state=state,
                 epsilon=epsilon,
@@ -151,7 +152,9 @@ def train_qlearning(
             )
 
             result = env.step(action)
-            reward = result.reward + (baseline_bonus if action == baseline_action else 0.0)
+            reward = result.reward
+            if baseline_action is not None and action == baseline_action:
+                reward += baseline_bonus
             next_state = discretizer.transform(result.observation)
             agent.update(
                 state=state,

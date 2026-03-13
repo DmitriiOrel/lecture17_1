@@ -8,9 +8,8 @@
 - Публичный сбор данных со свечей KuCoin spot/futures.
 - Фичи среды: объемы, волатильность, z-score базиса, momentum базиса.
 - Baseline-алгоритм (z-score mean reversion).
-- RL-обучение (tabular Q-learning), где baseline встроен как:
-  - imitation exploration;
-  - bonus к reward за совпадение действий с baseline.
+- RL-обучение (tabular Q-learning).
+- Live-решения: только RL (без fallback на baseline).
 - Live/paper loop для принятия решений и отправки хеджированных ордеров.
 
 ## Источник API KuCoin
