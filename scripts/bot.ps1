@@ -1,5 +1,5 @@
 param(
-    [ValidateSet("install", "env-template", "train-fast", "train", "shadow-once", "shadow", "live", "test", "notebook", "docker-build", "docker-shadow-once", "docker-live-up", "docker-live-logs", "docker-live-down")]
+    [ValidateSet("install", "env-template", "train-fast", "train", "shadow-once", "shadow", "live", "test", "notebook", "docker-build", "docker-train-fast", "docker-shadow-once", "docker-live-up", "docker-live-logs", "docker-live-down")]
     [string]$Action = "shadow-once",
     [string]$Config = "config/micro_near_v1_1m.json",
     [string]$ModelPath = "models/near_basis_qlearning.json",
@@ -205,10 +205,22 @@ switch ($Action) {
         New-Item -ItemType Directory -Path (Join-Path $ProjectDir ".runtime"), (Join-Path $ProjectDir "models"), (Join-Path $ProjectDir "reports"), (Join-Path $ProjectDir "logs") -Force | Out-Null
         Invoke-DockerCompose -ArgList @("run", "--rm", "near-rl-shadow-once")
     }
+    "docker-train-fast" {
+        Ensure-Docker
+        Ensure-DockerEngineRunning
+        New-Item -ItemType Directory -Path (Join-Path $ProjectDir ".runtime"), (Join-Path $ProjectDir "models"), (Join-Path $ProjectDir "reports"), (Join-Path $ProjectDir "logs") -Force | Out-Null
+        Invoke-DockerCompose -ArgList @("run", "--rm", "near-rl-train-fast")
+    }
     "docker-live-up" {
         Ensure-Docker
         Ensure-DockerEngineRunning
         New-Item -ItemType Directory -Path (Join-Path $ProjectDir ".runtime"), (Join-Path $ProjectDir "models"), (Join-Path $ProjectDir "reports"), (Join-Path $ProjectDir "logs") -Force | Out-Null
+        $ModelAbsolute = Join-Path $ProjectDir $ModelPath
+        if (-not (Test-Path $ModelAbsolute)) {
+            Write-Host "Model not found: $ModelAbsolute"
+            Write-Host "Bootstrapping model with docker train-fast before live..."
+            Invoke-DockerCompose -ArgList @("run", "--rm", "near-rl-train-fast")
+        }
         Remove-DockerContainerIfExists -Name "near-rl-live"
         Invoke-DockerCompose -ArgList @("up", "-d", "--build", "near-rl-live")
     }

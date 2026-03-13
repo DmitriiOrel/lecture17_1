@@ -78,7 +78,7 @@ One-command live (PowerShell):
 .\scripts\bot.ps1 -Action docker-live-up
 ```
 
-The script auto-removes old `near-rl-live` container name conflicts before start and will start Docker Desktop automatically if engine is down.
+The script auto-removes old `near-rl-live` container name conflicts before start, starts Docker Desktop automatically if engine is down, and bootstraps a fast model train if `models/near_basis_qlearning.json` is missing.
 
 One-command live (bash):
 
@@ -91,6 +91,12 @@ One-command logs/stop:
 ```powershell
 .\scripts\bot.ps1 -Action docker-live-logs
 .\scripts\bot.ps1 -Action docker-live-down
+```
+
+Optional explicit docker train-fast:
+
+```powershell
+.\scripts\bot.ps1 -Action docker-train-fast
 ```
 
 Run train:
@@ -233,6 +239,7 @@ git push -u origin main
 - `test`
 - `notebook`
 - `docker-build`
+- `docker-train-fast`
 - `docker-shadow-once`
 - `docker-live-up`
 - `docker-live-logs`

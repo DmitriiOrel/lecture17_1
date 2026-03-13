@@ -123,9 +123,19 @@ case "$ACTION" in
     mkdir -p "${PROJECT_DIR}/.runtime" "${PROJECT_DIR}/models" "${PROJECT_DIR}/reports" "${PROJECT_DIR}/logs"
     run_compose run --rm near-rl-shadow-once
     ;;
+  docker-train-fast)
+    ensure_docker
+    mkdir -p "${PROJECT_DIR}/.runtime" "${PROJECT_DIR}/models" "${PROJECT_DIR}/reports" "${PROJECT_DIR}/logs"
+    run_compose run --rm near-rl-train-fast
+    ;;
   docker-live-up)
     ensure_docker
     mkdir -p "${PROJECT_DIR}/.runtime" "${PROJECT_DIR}/models" "${PROJECT_DIR}/reports" "${PROJECT_DIR}/logs"
+    if [[ ! -f "${PROJECT_DIR}/${MODEL_PATH}" ]]; then
+      echo "Model not found: ${PROJECT_DIR}/${MODEL_PATH}"
+      echo "Bootstrapping model with docker train-fast before live..."
+      run_compose run --rm near-rl-train-fast
+    fi
     remove_container_if_exists "near-rl-live"
     run_compose up -d --build near-rl-live
     ;;
@@ -139,7 +149,7 @@ case "$ACTION" in
     ;;
   *)
     echo "Unknown action: $ACTION" >&2
-    echo "Supported: install, env-template, train-fast, train, shadow-once, shadow, live, test, notebook, docker-build, docker-shadow-once, docker-live-up, docker-live-logs, docker-live-down" >&2
+    echo "Supported: install, env-template, train-fast, train, shadow-once, shadow, live, test, notebook, docker-build, docker-train-fast, docker-shadow-once, docker-live-up, docker-live-logs, docker-live-down" >&2
     exit 2
     ;;
 esac
